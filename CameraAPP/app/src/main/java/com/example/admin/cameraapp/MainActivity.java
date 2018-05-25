@@ -47,6 +47,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     private static final int STATUS_RETEST = 4;
     private static final int STATUS_DISTANCE_FAIL = 5;
     private static final int RESULT_INFO = 6;
+    private static final int REFRESH_CAPTURE_BUTTON = 7;
 
     public static int[] mDataArray = new int[8];
     private static final String CAPTURE_STEP = "afeng-pos";
@@ -78,6 +79,24 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         getSupportActionBar().hide();
         permision();
         init();
+        new BTThread().start();
+    }
+    
+    class BTThread extends Thread {
+        @Override
+        public void run() {
+            super.run();
+
+            Timer timer = new Timer();
+            timer.schedule(new TimerTask() {
+                public void run() {
+                    System.out.println("-------设定要指定任务--------");
+                    Message msg = new Message();
+                    msg.what = REFRESH_CAPTURE_BUTTON;
+                    handler.sendMessage(msg);
+                }
+            }, 5000);// 设定指定的时间time,此处为5000毫秒
+        }
     }
 
     private void permision() {
@@ -495,6 +514,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                     printDisTanceLog();
                     showDialogInfo(STATUS_FAIL);
                     setViewEnable();
+                    setPhoneBackNotification();
                     break;
                 case STATUS_GOBACK:
                     front = false;
@@ -505,20 +525,27 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                     printDisTanceLog();
                     showDialogInfo(STATUS_DONE);
                     setViewEnable();
+                    setPhoneBackNotification();
                     break;
                 case STATUS_RETEST:
                     showDialogInfo(STATUS_RETEST);
                     setViewEnable();
+                    setPhoneBackNotification();
                     break;
                 case STATUS_DISTANCE_FAIL:
                     printDisTanceLog();
                     mDistance = msg.arg1;
                     showDialogInfo(STATUS_DISTANCE_FAIL);
                     setViewEnable();
+                    setPhoneBackNotification();
                     break;
                 case RESULT_INFO:
                     mTextContextView.setTextColor(Color.BLUE);
                     mTextContextView.setText("Count =" + VCMAlgo.mData[0] + " Positon =" + VCMAlgo.mData[1] + " dis = " + VCMAlgo.mData[2]);
+                    break;
+                case REFRESH_CAPTURE_BUTTON:
+                    bottonAutoClick();
+                    break;
             }
         }
     };
@@ -619,4 +646,23 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
             }
         }
     }
+    
+    private void setPhoneBackNotification() {
+        Log.d(TAG, "setPhoneBackNotification: ");
+        mParameters.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);//开启
+        mCamera.setParameters(mParameters);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(60000);//亮灯一分钟
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                mParameters.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);//关闭
+                mCamera.setParameters(mParameters);
+            }
+        }).start();
+    }
+
 }
