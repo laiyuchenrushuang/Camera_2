@@ -333,7 +333,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         //纯粹为了好看，简直没用
         if ("".equals(mEditMin.getText().toString()) || "".equals(mEditMax.getText().toString()) || "".equals(mEditStep.getText().toString())) {
             Log.d(TAG, "getTextInfo: laiyu");
-            Toast.makeText(mContext, "INPUT ERROR RESET DATA!", Toast.LENGTH_LONG).show();
+            Toast.makeText(mContext, "INPUT DEFAULT DATA! 150 550 10", Toast.LENGTH_LONG).show();
             mEditMin.setText("150");
             mEditMax.setText("550");
             mEditStep.setText("10");
@@ -552,12 +552,11 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
     private void printDisTanceLog() {
         int[][] data = VCMAlgo.dotList;
-        Log.d(TAG, " printDisTanceLog");
         for (int index = 0; index < 1024; index++) {
             if (data[0][index] == 0) {
                 break;
             }
-            Log.d(TAG, " " + data[0][index] + " " + data[1][index] + " " + data[2][index]);
+            Log.d(" printDisTanceLog", " " + data[0][index] + " " + data[1][index] + " " + data[2][index]);
         }
     }
 
