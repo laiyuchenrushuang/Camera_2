@@ -1,17 +1,15 @@
-package com.example.admin.cameraapp;
+package com.example.administrator.camera_2;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.AsyncTask;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
-import com.example.admin.cameraapp.utils.BitmapUtils;
-import com.example.admin.cameraapp.utils.VCMAlgo;
+import com.example.administrator.camera_2.utils.BitmapUtils;
+import com.example.administrator.camera_2.utils.VCMAlgo;
 
 import static android.support.constraint.Constraints.TAG;
 
@@ -50,8 +48,9 @@ public class TestTask extends AsyncTask<Void, Void, Integer> {
         Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length).copy(Bitmap.Config.ARGB_8888, true);
         int[] rgbData = BitmapUtils.getGreenByBitmap(bitmap);
         //为了节约时间，截图技巧
-        Rect rectL = new Rect(0, bitmap.getHeight() / 3, bitmap.getWidth() / 3, bitmap.getHeight() * 2 / 3);
-        Rect rectR = new Rect(bitmap.getWidth() * 2 / 3, bitmap.getHeight() / 3, bitmap.getWidth() - 1, bitmap.getHeight() * 2 / 3);
+        Rect rectL = new Rect(650, bitmap.getHeight() / 3, bitmap.getWidth() / 3, bitmap.getHeight() * 2 / 3);
+
+        Rect rectR = new Rect(bitmap.getWidth() * 2 / 3, bitmap.getHeight() / 3, bitmap.getWidth() - 650, bitmap.getHeight() * 2 / 3);
 
         Log.d(TAG, " top =" + rectR.top + " left =" + rectR.left + " right =" + rectR.right + " bottom =" + rectR.bottom);
         int statusCode = VCMAlgo.saveDotsDistance(afPos, front, index, rgbData, rectL, rectR, bitmap.getWidth(), bitmap.getHeight());

@@ -1,14 +1,10 @@
-package com.example.admin.cameraapp.utils;
+package com.example.administrator.camera_2.utils;
 
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.util.Log;
 
-import com.example.admin.cameraapp.MainActivity;
-
-import java.util.ArrayList;
-
-import static android.support.constraint.Constraints.TAG;
+import com.example.administrator.camera_2.MainActivity;
 
 /**
  * Created by admin on 2018/05/21   .
@@ -20,7 +16,7 @@ public class VCMAlgo {
     private static final int MAX_FOCIS_STEP = MainActivity.getPositionMax();
 
     private static final int SCAN_RETURN_DIS = MainActivity.getBackMaxDistance();//去程圆心距改变量大于此数据后,开始返程   50
-    private static final int DIS_STEP_DELTA = MainActivity.getGoDifference();//去程步长差异   10
+    private static final int DIS_STEP_DELTA = MainActivity.getGoDifference();//去程步长差异   15
     private static final int DIS_DELTA = MainActivity.getGoBackDifference();//  //往复差异   5
 
     public static int[][] dotList = new int[3][1024];
@@ -31,7 +27,6 @@ public class VCMAlgo {
     private static final int STATUS_RETEST = 4;
     private static final int STATUS_DISTANCE_FAIL = 5;
     public static float mDistance;
-    public static int mTextViewShowDisTance = 0;
     public static int mIndexMax;
     public static int[] mData =new int[3];
 
@@ -217,9 +212,9 @@ public class VCMAlgo {
 //        }
 
         //圆心
-        if(!availablePosCheck(dataBuffer,pointL,pointR,nWidth,threshold)){
-            return Double.MIN_VALUE;//
-        }
+//        if(!availablePosCheck(dataBuffer,pointL,pointR,nWidth,threshold)){
+//            return Double.MIN_VALUE;//
+//        }
         double distance = Math.sqrt((double) ((pointL.x - pointR.x)*(pointL.x - pointR.x) + (pointL.y - pointR.y)*(pointL.y - pointR.y)));
         Log.d(TAG, "Get2DotDis: distance ="+distance);
         return distance;
@@ -260,7 +255,6 @@ public class VCMAlgo {
         }else {
             dotList[2][index] = (int)(dis + 0.5f);
         }
-        mTextViewShowDisTance = (int) dis;
         return STATUS_OK;
     }
 
@@ -282,5 +276,9 @@ public class VCMAlgo {
             }
         }
         return STATUS_DONE;
+    }
+
+    public static int[][] getChartData(){
+        return dotList;
     }
 }

@@ -1,4 +1,4 @@
-package com.example.admin.cameraapp.utils;
+package com.example.administrator.camera_2.utils;
 
 import android.graphics.Bitmap;
 import android.graphics.Color;

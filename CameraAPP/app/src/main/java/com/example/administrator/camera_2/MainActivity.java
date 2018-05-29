@@ -1,4 +1,4 @@
-package com.example.admin.cameraapp;
+package com.example.administrator.camera_2;
 
 import android.Manifest;
 import android.app.AlertDialog;
@@ -9,13 +9,13 @@ import android.graphics.ImageFormat;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.hardware.Camera;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -26,8 +26,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.admin.cameraapp.utils.ActionUtils;
-import com.example.admin.cameraapp.utils.VCMAlgo;
+import com.example.administrator.camera_2.utils.ActionUtils;
+import com.example.administrator.camera_2.utils.VCMAlgo;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -35,6 +35,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity implements SurfaceHolder.Callback, View.OnClickListener {
 
@@ -47,7 +49,6 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     private static final int STATUS_RETEST = 4;
     private static final int STATUS_DISTANCE_FAIL = 5;
     private static final int RESULT_INFO = 6;
-    private static final int REFRESH_CAPTURE_BUTTON = 7;
 
     public static int[] mDataArray = new int[8];
     private static final String CAPTURE_STEP = "afeng-pos";
@@ -79,24 +80,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         getSupportActionBar().hide();
         permision();
         init();
-        new BTThread().start();
-    }
-    
-    class BTThread extends Thread {
-        @Override
-        public void run() {
-            super.run();
-
-            Timer timer = new Timer();
-            timer.schedule(new TimerTask() {
-                public void run() {
-                    System.out.println("-------设定要指定任务--------");
-                    Message msg = new Message();
-                    msg.what = REFRESH_CAPTURE_BUTTON;
-                    handler.sendMessage(msg);
-                }
-            }, 5000);// 设定指定的时间time,此处为5000毫秒
-        }
+        new LPThread().start();
     }
 
     private void permision() {
@@ -137,6 +121,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
         mHolder.addCallback(this);
         mTakePicture.setOnClickListener(this);
+        //mEditPW.setOnClickListener(this);
     }
 
     @Override
@@ -200,7 +185,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         mParameters = mCamera.getParameters();
         mParameters.setPictureFormat(ImageFormat.JPEG);
         mParameters.setPictureSize(getPictureWidth(), getPictureHight());
-        mParameters.set(KEY_FOCUS_MODE, FOCUS_MODE_MANUAL);
+        //mParameters.set(KEY_FOCUS_MODE, FOCUS_MODE_MANUAL);
         mParameters.set(CAPTURE_STEP, mPostionValue);
 
         mCamera.setParameters(mParameters);
@@ -285,6 +270,10 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                 setViewDisable();
                 fixEditViewValue();
                 capture();
+                break;
+            case R.id.picture_width:
+                //intentDataChart();
+                break;
         }
     }
 
@@ -333,7 +322,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         //纯粹为了好看，简直没用
         if ("".equals(mEditMin.getText().toString()) || "".equals(mEditMax.getText().toString()) || "".equals(mEditStep.getText().toString())) {
             Log.d(TAG, "getTextInfo: laiyu");
-            Toast.makeText(mContext, "INPUT DEFAULT DATA! 150 550 10", Toast.LENGTH_LONG).show();
+            Toast.makeText(mContext, "USE DEFAULT DATA!", Toast.LENGTH_LONG).show();
             mEditMin.setText("150");
             mEditMax.setText("550");
             mEditStep.setText("10");
@@ -350,7 +339,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         int go_back_diff = Integer.parseInt(mEditGBD.getText().toString());
 
         Log.d(TAG, "getTextInfo: min =" + min + "  max =" + max + " Step =" + step
-                +" "+picture_w+" "+picture_h+" "+back_max+" "+go_diff+" "+go_back_diff);
+                + " " + picture_w + " " + picture_h + " " + back_max + " " + go_diff + " " + go_back_diff);
         //如果除不尽，那么最大值去取相差step整数倍
         if ((max - min) % step != 0) {
             max = ((max - min) / step) * step + min;
@@ -494,11 +483,9 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
             switch (msg.what) {
                 case STATUS_OK:
-                    Log.d(TAG, "handleMessage: " + msg.what);
                     Log.d(TAG, "handleMessage: MAX" + mDataArray[1] + " STEP" + mDataArray[2]);
                     if (front && mPostionValue == mDataArray[1]) {
                         front = false;
-                        //mPostionValue = mPostionValue;//back
                     } else {
                         if (front) {
                             mPostionValue = mPostionValue + mDataArray[2];//
@@ -514,38 +501,36 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                     printDisTanceLog();
                     showDialogInfo(STATUS_FAIL);
                     setViewEnable();
-                    setPhoneBackNotification();
+                    openCameraShine();
+                    //intentDataChart();
                     break;
                 case STATUS_GOBACK:
                     front = false;
-                    //mPostionValue = mPostionValue - STEP;
                     capture();
                     break;
                 case STATUS_DONE:
                     printDisTanceLog();
                     showDialogInfo(STATUS_DONE);
                     setViewEnable();
-                    setPhoneBackNotification();
+                    openCameraShine();
+                    //intentDataChart();
                     break;
                 case STATUS_RETEST:
                     showDialogInfo(STATUS_RETEST);
                     setViewEnable();
-                    setPhoneBackNotification();
+                    openCameraShine();
                     break;
                 case STATUS_DISTANCE_FAIL:
                     printDisTanceLog();
                     mDistance = msg.arg1;
                     showDialogInfo(STATUS_DISTANCE_FAIL);
                     setViewEnable();
-                    setPhoneBackNotification();
+                    openCameraShine();
+                    //intentDataChart();
                     break;
                 case RESULT_INFO:
                     mTextContextView.setTextColor(Color.BLUE);
                     mTextContextView.setText("Count =" + VCMAlgo.mData[0] + " Positon =" + VCMAlgo.mData[1] + " dis = " + VCMAlgo.mData[2]);
-                    break;
-                case REFRESH_CAPTURE_BUTTON:
-                    bottonAutoClick();
-                    break;
             }
         }
     };
@@ -556,7 +541,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
             if (data[0][index] == 0) {
                 break;
             }
-            Log.d(" printDisTanceLog", " " + data[0][index] + " " + data[1][index] + " " + data[2][index]);
+            Log.d("printDisTanceLog", " " + data[0][index] + " " + data[1][index] + " " + data[2][index]);
         }
     }
 
@@ -595,26 +580,33 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     private void showDialogInfo(int statusDone) {
 
         if (statusDone == STATUS_DONE) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-            builder.setTitle("测试结果");
-            builder.setMessage("测试OK");
-            builder.setNegativeButton("取消", null).show();
+            String dialogMessage = "测试OK";
+            sendDialogInfo(dialogMessage);
+            //intentDataChart();
         } else if (statusDone == STATUS_FAIL) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-            builder.setTitle("测试结果");
-            builder.setMessage("测试FAIL");
-            builder.setNegativeButton("取消", null).show();
+            String dialogMessage = "测试FAIL";
+            sendDialogInfo(dialogMessage);
         } else if (statusDone == STATUS_RETEST) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-            builder.setTitle("测试结果");
-            builder.setMessage("测试位置不对，调整位置再测");
-            builder.setNegativeButton("取消", null).show();
+            String dialogMessage = "测试位置不对，调整位置再测";
+            sendDialogInfo(dialogMessage);
         } else if (statusDone == STATUS_DISTANCE_FAIL) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-            builder.setTitle("测试结果");
-            builder.setMessage("测试FAIL  Dmax - Dmin =" + mDistance);
-            builder.setNegativeButton("取消", null).show();
+            String dialogMessage = "测试FAIL  Dmax - Dmin =" + mDistance;
+            sendDialogInfo(dialogMessage);
         }
+    }
+
+    //把data数据构建一个折线图
+//    private void intentDataChart() {
+//        Intent intent = new Intent();
+//        intent.setClass(this, ChartActivity.class);
+//        startActivity(intent);
+//    }
+
+    private void sendDialogInfo(String dialogMessage) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        builder.setTitle("测试结果");
+        builder.setMessage(dialogMessage);
+        builder.setNegativeButton("取消", null).show();
     }
 
 //    private class TeskImage extends AsyncTask<Void,Void,Integer>{
@@ -645,23 +637,48 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
             }
         }
     }
-    
-    private void setPhoneBackNotification() {
-        Log.d(TAG, "setPhoneBackNotification: ");
+
+    private class LPThread  extends Thread{
+        @Override
+        public void run() {
+            super.run();
+            Timer timer = new Timer();
+            timer.schedule(new TimerTask() {
+                public void run() {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            System.out.println("-------设定要指定任务--------");
+                            getTextInfo();
+                            setViewDisable();
+                            fixEditViewValue();
+                            capture();
+                        }
+                    });
+                }
+            }, 5000);// 设定指定的时间time,此处为2000毫秒
+        }
+    }
+
+    public void openCameraShine(){
+        Log.d(TAG, "openCameraShine: ");
         mParameters.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);//开启
         mCamera.setParameters(mParameters);
+
         new Thread(new Runnable() {
             @Override
             public void run() {
+
                 try {
-                    Thread.sleep(60000);//亮灯一分钟
+                    Thread.sleep(6000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
                 mParameters.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);//关闭
                 mCamera.setParameters(mParameters);
             }
-        }).start();
-    }
+        });
 
+
+    }
 }
